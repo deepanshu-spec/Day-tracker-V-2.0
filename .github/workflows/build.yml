@@ -1,4 +1,4 @@
-name: Build Cordova Android App
+name: Build Android APK
 
 on:
   push:
@@ -21,6 +21,19 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install Gradle 7.6
+        run: |
+          wget https://services.gradle.org/distributions/gradle-7.6-bin.zip
+          unzip -q gradle-7.6-bin.zip
+          echo "$PWD/gradle-7.6/bin" >> $GITHUB_PATH
+          gradle -v
+
       - name: Install project dependencies
         run: npm install
 
@@ -33,5 +46,5 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DayTracker-APK
-          path: platforms/android/app/build/outputs/apk/release/app-release.apk
+          name: android-apk
+          path: platforms/android/app/build/outputs/apk/release/*.apk
