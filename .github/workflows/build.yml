@@ -52,8 +52,11 @@ jobs:
         unzip -q commandlinetools.zip -d /usr/local/android-sdk/cmdline-tools
         mv /usr/local/android-sdk/cmdline-tools/cmdline-tools /usr/local/android-sdk/cmdline-tools/latest
         yes | /usr/local/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/usr/local/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+    - name: Set Android SDK environment
+      run: |
         echo "ANDROID_SDK_ROOT=/usr/local/android-sdk" >> $GITHUB_ENV
-        echo "$PATH:/usr/local/android-sdk/platform-tools" >> $GITHUB_ENV
+        echo "/usr/local/android-sdk/platform-tools" >> $GITHUB_PATH
 
     - name: Add Android platform (force re-install)
       run: |
