@@ -1,4 +1,4 @@
-name: Day-Tracker CI
+name: Day-Tracker Android Build
 
 on:
   push:
@@ -17,45 +17,80 @@ jobs:
       ANDROID_SDK_ROOT: $HOME/Android/Sdk
 
     steps:
+    # 1) Checkout code
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # 2) Setup Node.js
     - name: Set up Node.js (16.x LTS)
       uses: actions/setup-node@v4
       with:
         node-version: '16'
 
+    # 3) Install project dependencies
     - name: Install project dependencies
       run: npm install
 
+    # 4) Ensure gradlew is executable
     - name: Ensure gradlew is executable (if present)
       run: |
         if [ -f "./gradlew" ]; then
           chmod +x ./gradlew
         fi
 
+    # 5) Setup Java 17
     - name: Set up Java 17
       uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 17
 
+    # 6) Install Android SDK
     - name: Install Android SDK
       uses: android-actions/setup-android@v3
       with:
-        api-level: 33
-        components: platform-tools, build-tools;33.0.0
+        cmdline-tools-version: 10406996
+        accept-android-sdk-licenses: true
+        packages: |
+          platforms;android-33
+          build-tools;33.0.0
+          platform-tools
 
-    - name: Build Android Debug APK
+    # 7) Build Debug APK
+    - name: Build Debug APK
       run: |
         if [ -f "./gradlew" ]; then
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
         else
           echo "No gradlew found; skipping debug build."
         fi
 
-    - name: Upload APK
+    # 8) Build Release APK + AAB
+    - name: Build Release APK + AAB
+      run: |
+        if [ -f "./gradlew" ]; then
+          ./gradlew assembleRelease bundleRelease --stacktrace
+        else
+          echo "No gradlew found; skipping release build."
+        fi
+
+    # 9) Upload Debug APK
+    - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: Day-Tracker-Debug-APK
         path: app/build/outputs/apk/debug/app-debug.apk
+
+    # 10) Upload Release APK
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: Day-Tracker-Release-APK
+        path: app/build/outputs/apk/release/app-release.apk
+
+    # 11) Upload Release AAB
+    - name: Upload Release AAB
+      uses: actions/upload-artifact@v4
+      with:
+        name: Day-Tracker-Release-AAB
+        path: app/build/outputs/bundle/release/app-release.aab
