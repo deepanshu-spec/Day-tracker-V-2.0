@@ -58,7 +58,7 @@ jobs:
 
     # 8️⃣ Upload APK artifact
     - name: Upload APK artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: DayTracker-APK
         path: platforms/android/app/build/outputs/apk/release/*.apk
@@ -69,7 +69,7 @@ jobs:
 
     # 🔟 Upload AAB artifact
     - name: Upload AAB artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: DayTracker-AAB
         path: platforms/android/app/build/outputs/bundle/release/*.aab
