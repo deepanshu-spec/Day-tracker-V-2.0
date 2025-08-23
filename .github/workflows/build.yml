@@ -58,25 +58,12 @@ jobs:
         echo "ANDROID_SDK_ROOT=/usr/local/android-sdk" >> $GITHUB_ENV
         echo "/usr/local/android-sdk/platform-tools" >> $GITHUB_PATH
 
-    - name: Install Gradle 7.6
-      run: |
-        wget https://services.gradle.org/distributions/gradle-7.6-bin.zip
-        sudo unzip -d /opt/gradle gradle-7.6-bin.zip
-        echo "/opt/gradle/gradle-7.6/bin" >> $GITHUB_PATH
-
-    - name: Force Cordova to use Gradle 7.6
-      run: |
-        echo "CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL=https://services.gradle.org/distributions/gradle-7.6-bin.zip" >> $GITHUB_ENV
-
-    - name: Add Android platform (force re-install)
+    - name: Add Android platform
       run: |
         cordova platform remove android || true
         cordova platform add android@12.0.1
 
-    - name: Make gradlew executable
-      run: chmod +x platforms/android/gradlew
-
-    - name: Create local.properties for SDK
+    - name: Create local.properties
       run: echo "sdk.dir=/usr/local/android-sdk" > platforms/android/local.properties
 
     - name: Build debug APK
