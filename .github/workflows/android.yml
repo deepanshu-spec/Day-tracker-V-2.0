@@ -2,11 +2,9 @@ name: Day-Tracker Android Build
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -32,11 +30,6 @@ jobs:
       with:
         distribution: temurin
         java-version: 17
-
-    - name: Install Android SDK components
-      run: |
-        yes | sdkmanager --licenses
-        sdkmanager "platforms;android-33" "build-tools;33.0.0" "platform-tools"
 
     - name: Build Debug APK
       working-directory: platforms/android
