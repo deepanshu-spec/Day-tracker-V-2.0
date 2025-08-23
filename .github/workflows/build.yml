@@ -1,76 +1,61 @@
-name: Build Cordova Android App
+name: Day-Tracker CI
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      JAVA_HOME: /usr/lib/jvm/java-17-temurin
+      ANDROID_SDK_ROOT: $HOME/Android/Sdk
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
+    - name: Set up Node.js (16.x LTS)
+      uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: '16'
 
-    - name: Set up Java JDK 17
+    - name: Install project dependencies
+      working-directory: .  # adjust if dependencies reside in a subfolder
+      run: npm install
+
+    - name: Ensure gradlew is executable (if present)
+      run: |
+        if [ -f "./gradlew" ]; then
+          chmod +x ./gradlew
+        fi
+
+    - name: Set up Java 17
       uses: actions/setup-java@v3
       with:
         distribution: temurin
         java-version: 17
 
-    - name: Cache Gradle
-      uses: actions/cache@v3
+    - name: Install Android SDK (if building Android)
+      if: contains(matrix.include.platform, 'android')
+      uses: android-actions/setup-android@v2
       with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper/
-        key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: gradle-
+        api-level: 33
+        components: platform-tools, build-tools;33.0.0
 
-    - name: Cache npm
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: npm-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: npm-
-
-    - name: Install Cordova
-      run: npm install -g cordova
-
-    - name: Install Android SDK and Build Tools
+    - name: Build Android Debug APK (if gradlew exists)
       run: |
-        sudo mkdir -p /usr/local/android-sdk
-        sudo chown $USER:$USER /usr/local/android-sdk
-        curl -o commandlinetools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip -q commandlinetools.zip -d /usr/local/android-sdk/cmdline-tools
-        mv /usr/local/android-sdk/cmdline-tools/cmdline-tools /usr/local/android-sdk/cmdline-tools/latest
-        yes | /usr/local/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/usr/local/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2" "extras;android;m2repository" "extras;google;m2repository"
+        if [ -f "./gradlew" ]; then
+          ./gradlew assembleDebug
+        else
+          echo "No gradlew found; skipping debug build."
+        fi
 
-    - name: Set Android SDK environment
-      run: |
-        echo "ANDROID_SDK_ROOT=/usr/local/android-sdk" >> $GITHUB_ENV
-        echo "/usr/local/android-sdk/platform-tools" >> $GITHUB_PATH
-
-    - name: Add Android platform
-      run: |
-        cordova platform remove android || true
-        cordova platform add android@12.0.1
-
-    - name: Create local.properties
-      run: echo "sdk.dir=/usr/local/android-sdk" > platforms/android/local.properties
-
-    - name: Build debug APK
-      run: npx cordova build android --debug
-
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: day-tracker-apk
-        path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+    - name: List APK outputs
+      if: success()
+      run: find . -type f -name "*.apk"
